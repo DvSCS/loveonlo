@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Uma Surpresinha para Você</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;700&family=Pacifico&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.3/howler.min.js"></script>
+
+   
+    <style>
+        :root {
+            --bg-color: #fff0f5; /* Lavender Blush */
+            --primary-color: #ffc0cb; /* Pink */
+            --secondary-color: #e6e6fa; /* Lavender */
+            --accent-color: #ffb6c1; /* Light Pink */
+            --text-color: #4b4b4b;
+            --text-light: #6d6d6d;
+            --highlight-color: #ffffff;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+            --font-main: 'Quicksand', sans-serif;
+            --font-fancy: 'Pacifico', cursive;
+            --font-serif: 'Playfair Display', serif;
+        }
+
+        .high-contrast {
+            --bg-color: #000000;
+            --primary-color: #ffff00;
+            --secondary-color: #00ffff;
+            --accent-color: #ff00ff;
+            --text-color: #ffffff;
+            --text-light: #cccccc;
+            --highlight-color: #ffffff;
+            --shadow-color: rgba(255, 255, 255, 0.3);
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: var(--font-main);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .main-container {
+            width: 100%;
+            height: 100%;
+            perspective: 1000px;
+            position: relative;
+        }
+
+        .scene {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.8s ease-in-out, transform 0.8s ease-in-out;
+            transform: scale(1.1);
+            will-change: transform, opacity;
+        }
+
+        .scene.active {
+            opacity: 1;
+            visibility: visible;
+            transform: scale(1);
+        }
+        
+        /* Loader */
+        #loader {
+            background: var(--bg-color);
+            z-index: 1000;
+        }
+        #loader .content { text-align: center; }
+        #loader h2 { font-family: var(--font-fancy); font-size: 2rem; color: var(--primary-color); }
+        #loader .heart-loader {
+            width: 50px;
+            height: 50px;
+            animation: heart-beat 1s infinite;
+            margin-top: 1rem;
+        }
+
+        @keyframes heart-beat {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+
+        /* Hero Scene */
+        #hero-scene {
+            transform-style: preserve-3d;
+            transition: transform 10s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+        
+        .parallax-layer {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #hero-content { transform: translateZ(0px); z-index: 5; text-align: center; }
+        #stars-bg { transform: translateZ(-300px) scale(1.5); opacity: 0.8; }
+        #hearts-bg { transform: translateZ(-150px) scale(1.2); opacity: 0.9; }
+        #character-layer { transform: translateZ(100px); }
+
+        .floating-element {
+            position: absolute;
+            animation: float 6s ease-in-out infinite;
+            opacity: 0;
+            animation-delay: calc(var(--i) * 0.2s);
+            animation-fill-mode: forwards;
+        }
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+            100% { transform: translateY(0px); }
+        }
+        @keyframes fade-in { to { opacity: 1; } }
+
+        .hero-title {
+            font-family: var(--font-fancy);
+            font-size: clamp(3rem, 10vw, 6rem);
+            color: var(--highlight-color);
+            text-shadow: 0 4px 15px var(--primary-color), 0 0 5px var(--accent-color);
+            margin-bottom: 2rem;
+            transform: translateY(20px);
+            opacity: 0;
+            transition: transform 1s 0.5s ease, opacity 1s 0.5s ease;
+        }
+        #hero-scene.reveal .hero-title {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .cta-button {
+            font-family: var(--font-main);
+            font-size: 1.2rem;
+            font-weight: 700;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 50px;
+            background-color: var(--primary-color);
+            color: var(--highlight-color);
+            cursor: pointer;
+            box-shadow: 0 5px 20px var(--shadow-color);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            animation: pulse 2s infinite;
+            transform: translateY(20px);
+            opacity: 0;
+            transition: transform 1s 0.8s ease, opacity 1s 0.8s ease;
+        }
+        #hero-scene.reveal .cta-button {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 8px 25px var(--shadow-color);
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(255, 192, 203, 0.7); }
+            70% { box-shadow: 0 0 0 20px rgba(255, 192, 203, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 192, 203, 0); }
+        }
+
+        .cute-character {
+            width: clamp(100px, 20vw, 150px);
+            height: auto;
+            position: absolute;
+            bottom: 5vh;
+            right: 5vw;
+            animation: float 5s ease-in-out infinite reverse;
+        }
+
+        /* Letter Scene */
+        .letter-container {
+            background: var(--highlight-color);
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px var(--shadow-color);
+            max-width: 600px;
+            width: 90%;
+            text-align: center;
+        }
+        #letter-output {
+            min-height: 150px;
+            font-size: 1.2rem;
+            line-height: 1.8;
+            color: var(--text-light);
+            margin: 1.5rem 0;
+        }
+        #letter-output::after {
+            content: '❤';
+            display: inline-block;
+            animation: blink 0.7s infinite;
+            margin-left: 2px;
+            color: var(--primary-color);
+        }
+        #letter-output.finished::after {
+            content: '';
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        /* Game Scene */
+        #game-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            max-width: 800px;
+            max-height: 600px;
+            border-radius: 20px;
+            overflow: hidden;
+            background: linear-gradient(180deg, var(--secondary-color), var(--bg-color));
+        }
+        #game-canvas, #confetti-canvas {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+        }
+        #confetti-canvas { pointer-events: none; z-index: 10; background: transparent; }
+        .game-ui {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            color: var(--text-color);
+            display: flex;
+            justify-content: space-between;
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-shadow: 0 2px 4px var(--shadow-color);
+            z-index: 5;
+        }
+        
+        .game-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255, 240, 245, 0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 2rem;
+            z-index: 20;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.5s ease, visibility 0s 0.5s;
+            pointer-events: none;
+        }
+        .game-overlay.active {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+            transition: opacity 0.5s ease;
+        }
+
+        .pop-message {
+            position: absolute;
+            background: var(--primary-color);
+            color: var(--highlight-color);
+            padding: 5px 10px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            animation: pop-up 1s ease-out forwards;
+            pointer-events: none;
+        }
+        @keyframes pop-up {
+            0% { transform: translateY(0) scale(0.5); opacity: 1; }
+            100% { transform: translateY(-50px) scale(1); opacity: 0; }
+        }
+
+        /* Gallery Scene */
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            width: 100%;
+            max-width: 900px;
+        }
+        .photo-card {
+            aspect-ratio: 1 / 1;
+            border-radius: 15px;
+            background-size: cover;
+            background-position: center;
+            box-shadow: 0 10px 20px var(--shadow-color);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            will-change: transform;
+        }
+
+        /* Secret Scene */
+        .secret-form { text-align: center; }
+        .secret-input {
+            font-family: var(--font-main);
+            font-size: 1.2rem;
+            padding: 0.8rem 1rem;
+            border: 2px solid var(--primary-color);
+            border-radius: 10px;
+            margin-top: 1rem;
+            text-align: center;
+            outline: none;
+            background: var(--highlight-color);
+            color: var(--text-color);
+        }
+        .secret-input:focus {
+            box-shadow: 0 0 0 4px var(--secondary-color);
+        }
+        .secret-input.error {
+            animation: shake 0.5s;
+            border-color: red;
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            50% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+        }
+        
+        /* Final Scene */
+        .final-message-box {
+            background: var(--highlight-color);
+            padding: clamp(1rem, 5vw, 3rem);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px var(--shadow-color);
+            max-width: 700px;
+            width: 90%;
+            text-align: center;
+        }
+        #final-long-message {
+            font-size: 1.1rem;
+            line-height: 1.7;
+            color: var(--text-light);
+            margin: 1.5rem 0;
+            max-height: 40vh;
+            overflow-y: auto;
+        }
+        .download-card-button {
+            margin-top: 1rem;
+        }
+        .card-preview-container { display: none; } /* For generating the downloadable card */
+
+        /* General UI */
+        .scene-title {
+            font-family: var(--font-fancy);
+            font-size: clamp(2rem, 6vw, 3.5rem);
+            color: var(--primary-color);
+            margin-bottom: 1.5rem;
+        }
+        .scene-description {
+            font-size: 1.1rem;
+            color: var(--text-light);
+            max-width: 600px;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        .action-button {
+            font-family: var(--font-main);
+            font-size: 1rem;
+            font-weight: 700;
+            padding: 0.8rem 1.8rem;
+            border: none;
+            border-radius: 50px;
+            background-color: var(--primary-color);
+            color: var(--highlight-color);
+            cursor: pointer;
+            box-shadow: 0 4px 15px var(--shadow-color);
+            transition: transform 0.2s ease, background-color 0.2s ease;
+        }
+        .action-button:hover {
+            transform: translateY(-3px);
+            background-color: var(--accent-color);
+        }
+        .action-button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        /* Controls */
+        .controls-container {
+            position: fixed;
+            bottom: 15px;
+            left: 15px;
+            display: flex;
+            gap: 10px;
+            z-index: 100;
+            background: rgba(255, 255, 255, 0.5);
+            padding: 8px;
+            border-radius: 20px;
+        }
+        .control-button {
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: var(--highlight-color);
+            color: var(--primary-color);
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 2px 5px var(--shadow-color);
+            transition: transform 0.2s ease;
+        }
+        .control-button:hover {
+            transform: scale(1.1);
+        }
+        .control-button svg {
+            width: 20px;
+            height: 20px;
+        }
+        .volume-slider {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 80px;
+            height: 5px;
+            background: var(--secondary-color);
+            border-radius: 5px;
+            outline: none;
+            transition: opacity 0.2s;
+            margin: auto;
+        }
+        .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 15px;
+            height: 15px;
+            background: var(--primary-color);
+            cursor: pointer;
+            border-radius: 50%;
+        }
+        
+        /* Reduced Motion */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+                scroll-behavior: auto !important;
+            }
+            .floating-element { animation: none; opacity: 1; }
+            #hero-scene { transition: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="main-container">
+        <!-- Loader Scene -->
+        <div id="loader" class="scene active">
+            <div class="content">
+                <h2>Preparando sua surpresa...</h2>
+                <svg class="heart-loader" viewBox="0 0 32 29.6">
+                    <path d="M23.6,0c-3.4,0-6.3,2.7-7.6,5.6C14.7,2.7,11.8,0,8.4,0C3.8,0,0,3.8,0,8.4c0,9.4,9.5,11.9,16,21.2
+	                c6.1-9.3,16-12.1,16-21.2C32,3.8,28.2,0,23.6,0z" fill="#ffc0cb"/>
+                </svg>
+            </div>
+        </div>
+
+        <!-- Hero Scene -->
+        <div id="hero-scene" class="scene">
+            <div class="parallax-layer" id="stars-bg"></div>
+            <div class="parallax-layer" id="hearts-bg"></div>
+            <div class="parallax-layer" id="character-layer">
+                 <svg class="cute-character" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <g>
+                        <path d="M86.9,45.2C86.9,25.9,71.2,10.2,51.8,10.2c-10.3,0-19.6,4.6-25.9,11.8c-1.2-1.8-3.1-2.9-5.2-2.9c-3.6,0-6.5,2.9-6.5,6.5c0,2.1,1,4,2.5,5.2c-0.2,1.2-0.3,2.4-0.3,3.6c0,19.3,15.7,35,35,35c1.8,0,3.6-0.1,5.3-0.4c1.8,1.4,4,2.2,6.4,2.2c4.8,0,8.8-3.9,8.8-8.8C91,51.4,89.5,47.9,86.9,45.2z" fill="#FFFFFF"/>
+                        <circle cx="39.5" cy="35.5" r="3.5" fill="#4B4B4B"/>
+                        <circle cx="62.5" cy="35.5" r="3.5" fill="#4B4B4B"/>
+                        <path d="M51,49.5c-4.4,0-8,3.6-8,8h16C59,53.1,55.4,49.5,51,49.5z" fill="#E6E6FA"/>
+                        <path d="M78.8,19.2c-2.3-2.3-6.1-2.3-8.5,0c-2.3,2.3-2.3,6.1,0,8.5c2.3,2.3,6.1,2.3,8.5,0S81.1,21.6,78.8,19.2z" fill="#FFC0CB"/>
+                        <path d="M85.4,6.5c-1.3-1.3-3.3-1.3-4.6,0c-1.3,1.3-1.3,3.3,0,4.6c1.3,1.3,3.3,1.3,4.6,0S86.7,7.8,85.4,6.5z" fill="#E6E6FA"/>
+                    </g>
+                </svg>
+            </div>
+            <div class="parallax-layer" id="hero-content">
+                <div>
+                    <h1 class="hero-title" id="girlfriend-name-display"></h1>
+                    <button id="start-button" class="cta-button">Clique aqui para uma surpresa</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Letter Scene -->
+        <div id="letter-scene" class="scene">
+            <div class="letter-container">
+                <h2 class="scene-title">Um Bilhetinho para Você</h2>
+                <p class="scene-description">Eu tenho tantas coisas para te dizer. Vamos ver o que vem à mente agora...</p>
+                <div id="letter-output"></div>
+                <button id="assemble-letter-button" class="action-button">Montar meu bilhete</button>
+                <button id="letter-continue-button" class="action-button" style="display: none; margin-left: 10px;">Continuar...</button>
+            </div>
+        </div>
+        
+        <!-- Game Scene -->
+        <div id="game-scene" class="scene">
+            <div id="game-container">
+                <canvas id="game-canvas"></canvas>
+                <canvas id="confetti-canvas"></canvas>
+                <div class="game-ui">
+                    <div id="score-display">Pontos: 0</div>
+                    <div id="timer-display">Tempo: 30</div>
+                </div>
+                <div id="game-intro" class="game-overlay active">
+                    <h2 class="scene-title">Pegue Meu Coração!</h2>
+                    <p class="scene-description">Clique ou toque nos corações que estão caindo para coletá-los. Vamos ver se você consegue pegar todos!</p>
+                    <button id="start-game-button" class="action-button">Começar Jogo</button>
+                </div>
+                 <div id="game-end" class="game-overlay">
+                    <h2 class="scene-title" id="game-end-title"></h2>
+                    <p class="scene-description" id="game-end-message"></p>
+                    <button id="game-continue-button" class="action-button">Ver o que vem a seguir</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gallery Scene -->
+        <div id="gallery-scene" class="scene">
+            <div>
+                <h2 class="scene-title">Nossos Filhos do Multiverso</h2>
+                <p class="scene-description">Apenas algumas das minhas memórias favoritas com você.!</p>
+                <div class="gallery-grid">
+                  <!-- PHOTO-REPLACE -->
+<div class="photo-card" style="background-image: url('https://i.postimg.cc/bYB9YYRg/1753559214100.jpg');"></div>
+<!-- PHOTO-REPLACE -->
+<div class="photo-card" style="background-image: url('https://i.postimg.cc/wMZXwFBZ/1754533135827.jpg');"></div>
+                </div>
+                <button id="gallery-continue-button" class="action-button" style="margin-top: 2rem;">Uma Última Coisa...</button>
+            </div>
+        </div>
+
+        <!-- Secret Scene -->
+        <div id="secret-scene" class="scene">
+            <div class="letter-container">
+                <h2 class="scene-title">Um Segredo...</h2>
+                <p class="scene-description">Eu tenho uma mensagem final para você, mas está trancada. Digite nosso código secreto para vê-la.</p>
+                <form class="secret-form" onsubmit="event.preventDefault(); window.app.checkSecretCode();">
+                    <input type="text" id="secret-input" class="secret-input" placeholder="Código Secreto" aria-label="Código Secreto">
+                    <button type="submit" class="action-button" style="margin-top: 1rem;">Desvendar</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Final Scene -->
+        <div id="final-scene" class="scene">
+            <div class="final-message-box">
+                <h2 class="scene-title">Para Você, Sempre</h2>
+                <div id="final-long-message"></div>
+                <button id="download-card-button" class="action-button download-card-button">Baixar um Cartãozinho Imprimível</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- UI Controls -->
+    <div class="controls-container">
+        <button id="audio-toggle" class="control-button" aria-label="Tocar/Pausar Música">
+            <svg id="play-icon" viewBox="0 0 24 24"><path fill="currentColor" d="M8,5.14V19.14L19,12.14L8,5.14Z" /></svg>
+            <svg id="pause-icon" viewBox="0 0 24 24" style="display: none;"><path fill="currentColor" d="M14,19H18V5H14M6,19H10V5H6V19Z" /></svg>
+        </button>
+        <input type="range" id="volume-slider" class="volume-slider" min="0" max="1" step="0.01" value="0.5" aria-label="Volume">
+        <button id="contrast-toggle" class="control-button" aria-label="Alternar Alto Contraste">
+            <svg viewBox="0 0 24 24"><path fill="currentColor" d="M12,18A6,6 0 0,1 6,12A6,6 0 0,1 12,6V18M20,15.31L23.31,12L20,8.69V15.31M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z" /></svg>
+        </button>
+    </div>
+
+    <!-- For generating the card -->
+    <div id="card-preview-container" class="card-preview-container"></div>
+
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // ====================================================================
+        // CUSTOMIZATION - EDIT THESE VALUES
+        // ====================================================================
+        const config = {
+            girlfriendName: "Meu Amor", // <-- YOUR GIRLFRIEND'S NAME
+            boyfriendName: "Davi", // <-- YOUR NAME
+            secretCode: "10101", // <-- A SECRET WORD (keep it simple)
+
+            // Phrases for the random love letter generator
+            loveLetterPhrases: [
+                "Toda vez que te vejo, meu dia fica um pouco mais brilhante.",
+                "Pensar nas nossas aventuras juntos sempre me faz sorrir.",
+                "Você tem o jeito mais incrível de me fazer sentir amado.",
+                "Eu sou incrivelmente sortudo por ter você na minha vida.",
+                "Sua gentileza e sua risada são minhas coisas favoritas no mundo.",
+                "Apenas um lembrete de que você está sempre em meus pensamentos.",
+            ],
+
+            // Short messages that pop up when a heart is caught in the game
+            heartCatchMessages: [
+                "Meu coração!", "Pegou!", "Que fofo!", "Eba!", "Amei!", "Pra você!"
+            ],
+
+            // The long, final message unlocked with the secret code
+            longMessage: `Meu bem, se você está lendo isso, significa que chegou ao final da minha pequena surpresa. Eu só queria um momento para te dizer, sem joguinhos ou distrações, o quanto você realmente significa para mim. Você é meu tudo. Obrigado por ser você.`,
+            
+            // URL for the background music. Can be a local file ('music.mp3') or a direct link.
+            // Credit: 'Sappheiros - Embrace' is a great royalty-free option.
+            audioUrl: 'https://www.chosic.com/wp-content/uploads/2021/02/Sappheiros-Embrace.mp3',
+        };
+        // ====================================================================
+        // END OF CUSTOMIZATION
+        // ====================================================================
+
+        const app = {
+            // --- Elements ---
+            elements: {
+                mainContainer: document.querySelector('.main-container'),
+                loader: document.getElementById('loader'),
+                scenes: document.querySelectorAll('.scene'),
+                heroScene: document.getElementById('hero-scene'),
+                girlfriendNameDisplay: document.getElementById('girlfriend-name-display'),
+                startButton: document.getElementById('start-button'),
+                starsBg: document.getElementById('stars-bg'),
+                heartsBg: document.getElementById('hearts-bg'),
+                letterScene: {
+                    assembleBtn: document.getElementById('assemble-letter-button'),
+                    continueBtn: document.getElementById('letter-continue-button'),
+                    output: document.getElementById('letter-output'),
+                },
+                gameScene: {
+                    container: document.getElementById('game-container'),
+                    canvas: document.getElementById('game-canvas'),
+                    confettiCanvas: document.getElementById('confetti-canvas'),
+                    scoreDisplay: document.getElementById('score-display'),
+                    timerDisplay: document.getElementById('timer-display'),
+                    intro: document.getElementById('game-intro'),
+                    startBtn: document.getElementById('start-game-button'),
+                    endScreen: document.getElementById('game-end'),
+                    endTitle: document.getElementById('game-end-title'),
+                    endMessage: document.getElementById('game-end-message'),
+                    continueBtn: document.getElementById('game-continue-button'),
+                },
+                galleryScene: {
+                    cards: document.querySelectorAll('.photo-card'),
+                    continueBtn: document.getElementById('gallery-continue-button'),
+                },
+                secretScene: {
+                    input: document.getElementById('secret-input'),
+                    form: document.querySelector('.secret-form'),
+                },
+                finalScene: {
+                    message: document.getElementById('final-long-message'),
+                    downloadBtn: document.getElementById('download-card-button'),
+                },
+                audio: {
+                    toggleBtn: document.getElementById('audio-toggle'),
+                    playIcon: document.getElementById('play-icon'),
+                    pauseIcon: document.getElementById('pause-icon'),
+                    volumeSlider: document.getElementById('volume-slider'),
+                },
+                contrastToggle: document.getElementById('contrast-toggle'),
+            },
+
+            // --- State ---
+            state: {
+                currentScene: 'loader',
+                isMusicPlaying: false,
+                reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+                audioContext: null,
+                music: null,
+            },
+
+            // --- Game State ---
+            game: { hearts: [], score: 0, timer: 30, gameInterval: null, isActive: false, ctx: null, confettiCtx: null, particles: [] },
+
+            // --- Initialization ---
+            init() {
+                window.app = this;
+                this.setupCustomContent();
+                this.setupEventListeners();
+                this.createParallaxElements(this.elements.starsBg, 50, '⭐', [10, 20]);
+                this.createParallaxElements(this.elements.heartsBg, 30, '💖', [20, 40]);
+                this.setupAudio();
+
+                window.addEventListener('load', () => {
+                    setTimeout(() => {
+                        this.elements.loader.classList.remove('active');
+                        this.transitionToScene('hero-scene');
+                        this.cinematicIntro();
+                    }, 1000);
+                });
+            },
+
+            setupCustomContent() {
+                this.elements.girlfriendNameDisplay.textContent = config.girlfriendName;
+                this.elements.finalScene.message.innerHTML = config.longMessage.replace(/\n/g, '<br>');
+            },
+
+            transitionToScene(sceneId) {
+                this.state.currentScene = sceneId;
+                this.elements.scenes.forEach(scene => {
+                    scene.classList.toggle('active', scene.id === sceneId);
+                });
+            },
+
+            setupEventListeners() {
+                this.elements.startButton.addEventListener('click', () => { this.playSound(261.63, 0.1, 'sine'); this.transitionToScene('letter-scene'); this.playMusic(); });
+                this.elements.letterScene.assembleBtn.addEventListener('click', () => this.generateLetter());
+                this.elements.letterScene.continueBtn.addEventListener('click', () => this.transitionToScene('game-scene'));
+                this.elements.gameScene.startBtn.addEventListener('click', () => this.startGame());
+                this.elements.gameScene.continueBtn.addEventListener('click', () => this.transitionToScene('gallery-scene'));
+                this.elements.galleryScene.cards.forEach(card => { card.addEventListener('mousemove', e => this.galleryTiltEffect(e, card)); card.addEventListener('mouseleave', () => card.style.transform = 'perspective(1000px) rotateX(0) rotateY(0)'); });
+                this.elements.galleryScene.continueBtn.addEventListener('click', () => this.transitionToScene('secret-scene'));
+                this.elements.secretScene.form.addEventListener('submit', () => this.checkSecretCode());
+                this.elements.finalScene.downloadBtn.addEventListener('click', () => this.downloadCard());
+                this.elements.audio.toggleBtn.addEventListener('click', () => this.toggleMusic());
+                this.elements.audio.volumeSlider.addEventListener('input', e => this.setVolume(e.target.value));
+                this.elements.contrastToggle.addEventListener('click', () => document.body.classList.toggle('high-contrast'));
+            },
+
+            cinematicIntro() {
+                if (this.state.reducedMotion) { this.elements.heroScene.classList.add('reveal'); return; }
+                const hero = this.elements.heroScene;
+                hero.style.transform = 'translateZ(-100px) rotateX(10deg) rotateY(-10deg) scale(1.2)';
+                requestAnimationFrame(() => { hero.style.transform = 'translateZ(0) rotateX(0) rotateY(0) scale(1)'; hero.classList.add('reveal'); });
+            },
+            
+            createParallaxElements(container, count, content, sizeRange) {
+                for (let i = 0; i < count; i++) {
+                    const el = document.createElement('div');
+                    el.classList.add('floating-element');
+                    el.textContent = content;
+                    el.style.setProperty('--i', i);
+                    el.style.left = `${Math.random() * 100}%`;
+                    el.style.top = `${Math.random() * 100}%`;
+                    el.style.fontSize = `${Math.random() * (sizeRange[1] - sizeRange[0]) + sizeRange[0]}px`;
+                    el.style.animationName = `float, fade-in`;
+                    el.style.animationDuration = `${Math.random() * 5 + 5}s, 0.5s`;
+                    container.appendChild(el);
+                }
+            },
+
+            setupAudio() {
+                if (config.audioUrl) { this.state.music = new Howl({ src: [config.audioUrl], loop: true, volume: 0.5, html5: true }); }
+                try { this.state.audioContext = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) { console.warn('Web Audio API is not supported.'); }
+            },
+            
+            playMusic() {
+                if (this.state.music && !this.state.isMusicPlaying && !this.state.reducedMotion) {
+                    this.state.music.play();
+                    this.state.isMusicPlaying = true;
+                    this.elements.audio.playIcon.style.display = 'none';
+                    this.elements.audio.pauseIcon.style.display = 'block';
+                }
+            },
+            
+            toggleMusic() {
+                if (!this.state.music) return;
+                if (this.state.isMusicPlaying) {
+                    this.state.music.pause();
+                    this.state.isMusicPlaying = false;
+                    this.elements.audio.playIcon.style.display = 'block';
+                    this.elements.audio.pauseIcon.style.display = 'none';
+                } else {
+                    this.state.music.play();
+                    this.state.isMusicPlaying = true;
+                    this.elements.audio.playIcon.style.display = 'none';
+                    this.elements.audio.pauseIcon.style.display = 'block';
+                }
+            },
+            
+            setVolume(value) { if (this.state.music) this.state.music.volume(value); },
+
+            playSound(frequency, duration, type = 'triangle') {
+                if (!this.state.audioContext || this.state.reducedMotion) return;
+                const osc = this.state.audioContext.createOscillator();
+                const gain = this.state.audioContext.createGain();
+                osc.connect(gain);
+                gain.connect(this.state.audioContext.destination);
+                osc.type = type;
+                osc.frequency.value = frequency;
+                gain.gain.setValueAtTime(0, this.state.audioContext.currentTime);
+                gain.gain.linearRampToValueAtTime(0.5, this.state.audioContext.currentTime + 0.01);
+                osc.start(this.state.audioContext.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.00001, this.state.audioContext.currentTime + duration);
+                osc.stop(this.state.audioContext.currentTime + duration);
+            },
+
+            generateLetter() {
+                this.elements.letterScene.assembleBtn.disabled = true;
+                const phrases = [...config.loveLetterPhrases].sort(() => 0.5 - Math.random()).slice(0, 3);
+                let fullText = phrases.join(' ') + `\n\n- ${config.boyfriendName}`;
+                this.typewriterEffect(this.elements.letterScene.output, fullText, () => {
+                    this.elements.letterScene.continueBtn.style.display = 'inline-block';
+                });
+            },
+            
+            typewriterEffect(element, text, callback) {
+                element.innerHTML = '';
+                element.classList.remove('finished');
+                let i = 0;
+                const typing = () => {
+                    if (i < text.length) {
+                        element.innerHTML += text.charAt(i) === '\n' ? '<br>' : text.charAt(i);
+                        i++;
+                        if (i % 3 === 0) this.playSound(800 + Math.random() * 200, 0.05, 'square');
+                        setTimeout(typing, 50);
+                    } else {
+                        element.classList.add('finished');
+                        if (callback) callback();
+                    }
+                };
+                typing();
+            },
+            
+            startGame() {
+                this.elements.gameScene.intro.classList.remove('active');
+                this.game.ctx = this.elements.gameScene.canvas.getContext('2d');
+                this.elements.gameScene.canvas.width = this.elements.gameScene.container.clientWidth;
+                this.elements.gameScene.canvas.height = this.elements.gameScene.container.clientHeight;
+                this.game.score = 0;
+                this.game.timer = 30;
+                this.game.hearts = [];
+                this.game.isActive = true;
+                this.elements.gameScene.scoreDisplay.textContent = `Pontos: 0`;
+                this.elements.gameScene.timerDisplay.textContent = `Tempo: 30`;
+                this.elements.gameScene.canvas.addEventListener('click', this.handleGameClick.bind(this));
+                this.game.gameInterval = setInterval(() => { this.game.timer--; this.elements.gameScene.timerDisplay.textContent = `Tempo: ${this.game.timer}`; if (this.game.timer <= 0) { this.endGame(false); } }, 1000);
+                this.gameLoop();
+            },
+            
+            endGame(won) {
+                clearInterval(this.game.gameInterval);
+                this.game.isActive = false;
+                if (won) {
+                    this.elements.gameScene.endTitle.textContent = "Você conseguiu!";
+                    this.elements.gameScene.endMessage.textContent = `Você pegou todos os meus corações! Você é a melhor.`;
+                    this.triggerConfetti();
+                    this.playSound(523.25, 0.5, 'sine');
+                } else {
+                    this.elements.gameScene.endTitle.textContent = "O tempo acabou!";
+                    this.elements.gameScene.endMessage.textContent = `Boa tentativa! Pronta para a próxima surpresa?`;
+                }
+                this.elements.gameScene.endScreen.classList.add('active');
+            },
+
+            gameLoop() {
+                if (!this.game.isActive) return;
+                const canvas = this.elements.gameScene.canvas;
+                this.game.ctx.clearRect(0, 0, canvas.width, canvas.height);
+                if (Math.random() < 0.1) { this.game.hearts.push({ x: Math.random() * canvas.width, y: -30, size: Math.random() * 20 + 20, speed: Math.random() * 2 + 1 }); }
+                for (let i = this.game.hearts.length - 1; i >= 0; i--) { const heart = this.game.hearts[i]; heart.y += heart.speed; this.drawHeart(heart.x, heart.y, heart.size, heart.size, '#ffc0cb'); if (heart.y > canvas.height + 30) { this.game.hearts.splice(i, 1); } }
+                requestAnimationFrame(this.gameLoop.bind(this));
+            },
+            
+            handleGameClick(event) {
+                if (!this.game.isActive) return;
+                const rect = this.elements.gameScene.canvas.getBoundingClientRect();
+                const x = event.clientX - rect.left;
+                const y = event.clientY - rect.top;
+                for (let i = this.game.hearts.length - 1; i >= 0; i--) {
+                    const heart = this.game.hearts[i];
+                    if (x > heart.x - heart.size/2 && x < heart.x + heart.size/2 && y > heart.y - heart.size/2 && y < heart.y + heart.size/2) {
+                        this.game.hearts.splice(i, 1);
+                        this.game.score++;
+                        this.elements.gameScene.scoreDisplay.textContent = `Pontos: ${this.game.score}`;
+                        this.playSound(440, 0.1, 'triangle');
+                        this.showPopMessage(event.clientX, event.clientY);
+                        if (this.game.score >= 10) { this.endGame(true); }
+                        break;
+                    }
+                }
+            },
+
+            drawHeart(x, y, w, h, c) {
+                const ctx = this.game.ctx; ctx.save(); ctx.beginPath();
+                const tcH = h * 0.3; ctx.moveTo(x, y + tcH);
+                ctx.bezierCurveTo(x, y, x - w / 2, y, x - w / 2, y + tcH);
+                ctx.bezierCurveTo(x - w / 2, y + (h + tcH) / 2, x, y + (h + tcH) / 2, x, y + h);
+                ctx.bezierCurveTo(x, y + (h + tcH) / 2, x + w / 2, y + (h + tcH) / 2, x + w / 2, y + tcH);
+                ctx.bezierCurveTo(x + w / 2, y, x, y, x, y + tcH);
+                ctx.closePath(); ctx.fillStyle = c; ctx.fill(); ctx.restore();
+            },
+
+            showPopMessage(x, y) {
+                const msg = document.createElement('div');
+                msg.classList.add('pop-message');
+                msg.textContent = config.heartCatchMessages[Math.floor(Math.random() * config.heartCatchMessages.length)];
+                msg.style.left = `${x}px`; msg.style.top = `${y}px`;
+                document.body.appendChild(msg); setTimeout(() => msg.remove(), 1000);
+            },
+
+            triggerConfetti() {
+                const canvas = this.elements.gameScene.confettiCanvas; this.game.confettiCtx = canvas.getContext('2d');
+                canvas.width = this.elements.gameScene.container.clientWidth; canvas.height = this.elements.gameScene.container.clientHeight;
+                this.game.particles = []; const pC = 200; const c = ['#ffc0cb', '#e6e6fa', '#ffb6c1', '#ffffff'];
+                for (let i = 0; i < pC; i++) { this.game.particles.push({ x: canvas.width / 2, y: canvas.height/2, color: c[Math.floor(Math.random() * c.length)], radius: Math.random() * 3 + 2, vx: Math.random() * 10 - 5, vy: Math.random() * -15 - 5, alpha: 1, }); }
+                this.animateConfetti();
+            },
+
+            animateConfetti() {
+                const ctx = this.game.confettiCtx; if (!ctx) return;
+                ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+                let active = false;
+                this.game.particles.forEach(p => { if (p.alpha > 0) { active = true; p.x += p.vx; p.y += p.vy; p.vy += 0.2; p.alpha -= 0.01; ctx.globalAlpha = p.alpha; ctx.beginPath(); ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2); ctx.fillStyle = p.color; ctx.fill(); } });
+                if (active) { requestAnimationFrame(this.animateConfetti.bind(this)); } else { ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height); }
+            },
+            
+            galleryTiltEffect(event, card) {
+                if (this.state.reducedMotion) return;
+                const { left, top, width, height } = card.getBoundingClientRect();
+                const x = (event.clientX - left) / width; const y = (event.clientY - top) / height;
+                const rX = (y - 0.5) * -20; const rY = (x - 0.5) * 20;
+                card.style.transform = `perspective(1000px) rotateX(${rX}deg) rotateY(${rY}deg) scale3d(1.05, 1.05, 1.05)`;
+            },
+
+            checkSecretCode() {
+                const input = this.elements.secretScene.input;
+                if (input.value.toLowerCase().trim() === config.secretCode.toLowerCase()) {
+                    this.playSound(659.25, 0.2, 'sine');
+                    this.transitionToScene('final-scene');
+                } else {
+                    this.playSound(130.81, 0.3, 'sawtooth');
+                    input.classList.add('error');
+                    setTimeout(() => input.classList.remove('error'), 500);
+                }
+            },
+            
+            downloadCard() {
+                const canvas = document.createElement('canvas');
+                canvas.width = 600;
+                canvas.height = 400;
+                const ctx = canvas.getContext('2d');
+
+                // Background Gradient
+                const gradient = ctx.createLinearGradient(0, 0, 600, 400);
+                gradient.addColorStop(0, '#fff4f7');
+                gradient.addColorStop(1, '#e6e6fa');
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, 600, 400);
+
+                // Decorative Corner SVG Path
+                const cornerPath = new Path2D('M0,100 Q50,50 100,0 L0,0 Z M100,20 Q60,60 20,100 L0,100 L0,80 Q40,40 80,0 L100,0 Z');
+                ctx.save();
+                ctx.translate(500, 300);
+                ctx.fillStyle = 'rgba(255, 192, 203, 0.3)';
+                ctx.fill(cornerPath);
+                ctx.restore();
+
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                
+                // Title
+                ctx.font = "48px 'Pacifico', cursive";
+                ctx.fillStyle = '#d47eac';
+                ctx.fillText(`Para o meu bem, ${config.girlfriendName}`, 300, 100);
+
+                // Body
+                ctx.font = "22px 'Quicksand', sans-serif";
+                ctx.fillStyle = '#6d6d6d';
+                const bodyText = 'No universo de todas as coisas, meu coração escolheu\na sua alma para chamar de lar. Cada dia com você é a prova\nde que a felicidade é a jornada que fazemos juntos.\n\n';
+                this.wrapText(ctx, bodyText, 300, 200, 500, 30);
+
+                // Signature
+                ctx.font = "28px 'Pacifico', cursive";
+                ctx.fillStyle = '#d47eac';
+                ctx.fillText(`Com todo o meu amor, ${config.boyfriendName}`, 300, 320);
+
+                const link = document.createElement('a');
+                link.download = `Cartao_para_${config.girlfriendName.replace(/\s/g, '_')}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            },
+
+            wrapText(context, text, x, y, maxWidth, lineHeight) {
+                const lines = text.split('\n');
+                for (let i = 0; i < lines.length; i++) {
+                    context.fillText(lines[i], x, y + (i * lineHeight));
+                }
+            },
+        };
+
+        app.init();
+    });
+    </script>
+</body>
+</html>
